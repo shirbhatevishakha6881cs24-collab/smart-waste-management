@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SafaiTrack — Smart Waste Reporting</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#EEF2EA;
+    --surface:#FFFFFF;
+    --ink:#16231C;
+    --ink-soft:#4B5A50;
+    --primary:#2E6F4E;
+    --primary-dark:#1F4F37;
+    --primary-tint:#DCEAE1;
+    --amber:#B8791E;
+    --amber-tint:#F7E9CF;
+    --red:#A8362D;
+    --red-tint:#F5DCD9;
+    --blue:#2E5A8C;
+    --blue-tint:#DCE7F2;
+    --border:#D8DED2;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'Source Sans 3',sans-serif;
+    font-size:16px;
+    line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3,.brand{font-family:'Archivo',sans-serif;}
+  .app{max-width:1080px;margin:0 auto;padding:0 20px 64px;}
+
+  /* Top bar */
+  .topbar{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:22px 0 16px;
+    border-bottom:2px solid var(--ink);
+    margin-bottom:22px;
+    flex-wrap:wrap;
+    gap:14px;
+  }
+  .brand{display:flex;align-items:baseline;gap:10px;}
+  .brand-mark{
+    width:34px;height:34px;border-radius:8px;background:var(--primary);
+    display:inline-flex;align-items:center;justify-content:center;
+    color:#fff;font-weight:800;font-size:16px;flex:none;
+  }
+  .brand-name{font-size:22px;font-weight:800;letter-spacing:-0.01em;}
+  .brand-tag{font-size:13px;color:var(--ink-soft);font-family:'Source Sans 3',sans-serif;}
+  nav.tabs{display:flex;gap:6px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:4px;}
+  nav.tabs button{
+    border:none;background:transparent;padding:9px 16px;border-radius:7px;
+    font-family:'Source Sans 3',sans-serif;font-weight:600;font-size:14.5px;
+    color:var(--ink-soft);cursor:pointer;transition:background .15s,color .15s;
+  }
+  nav.tabs button.active{background:var(--primary);color:#fff;}
+  nav.tabs button:not(.active):hover{background:var(--primary-tint);color:var(--primary-dark);}
+
+  /* Stats */
+  .stats{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:28px;}
+  .stat{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 14px;}
+  .stat .num{font-family:'Archivo',sans-serif;font-size:26px;font-weight:800;line-height:1;}
+  .stat .lbl{font-size:12.5px;color:var(--ink-soft);margin-top:6px;font-weight:600;}
+  .stat.overdue{background:var(--red-tint);border-color:#E2B7B2;}
+  .stat.overdue .num{color:var(--red);}
+
+  /* Panels */
+  .panel{display:none;}
+  .panel.active{display:block;}
+  .grid-2{display:grid;grid-template-columns:1.1fr .9fr;gap:24px;align-items:start;}
+  @media (max-width:760px){ .grid-2{grid-template-columns:1fr;} .stats{grid-template-columns:repeat(2,1fr);} }
+
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:22px;}
+  .card h2{font-size:19px;margin:0 0 4px;}
+  .subtext{color:var(--ink-soft);font-size:14px;margin:0 0 18px;}
+
+  label{display:block;font-weight:600;font-size:13.5px;margin:14px 0 6px;}
+  label:first-of-type{margin-top:0;}
+  input[type=text],input[type=tel],select,textarea{
+    width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:8px;
+    font-family:inherit;font-size:14.5px;background:#fcfdfb;color:var(--ink);
+  }
+  textarea{resize:vertical;min-height:70px;}
+  input:focus,select:focus,textarea:focus,button:focus-visible{
+    outline:2px solid var(--primary);outline-offset:1px;
+  }
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  .btn{
+    border:none;border-radius:8px;padding:11px 18px;font-weight:700;font-size:14.5px;
+    cursor:pointer;font-family:inherit;
+  }
+  .btn-primary{background:var(--primary);color:#fff;}
+  .btn-primary:hover{background:var(--primary-dark);}
+  .btn-ghost{background:var(--surface);border:1px solid var(--border);color:var(--ink);}
+  .btn-ghost:hover{background:var(--bg);}
+  .btn-block{width:100%;margin-top:18px;}
+  .loc-row{display:flex;gap:8px;}
+  .loc-row input{flex:1;}
+  #geo-status{font-size:12.5px;color:var(--ink-soft);margin-top:6px;}
+  .photo-drop{
+    border:1.5px dashed var(--border);border-radius:10px;padding:16px;text-align:center;
+    cursor:pointer;color:var(--ink-soft);font-size:13.5px;margin-top:6px;
+  }
+  .photo-drop:hover{border-color:var(--primary);color:var(--primary-dark);}
+  #photo-preview{max-width:100%;border-radius:8px;margin-top:10px;display:none;}
+
+  .tips{margin-top:18px;}
+  .tips li{margin-bottom:8px;font-size:14px;color:var(--ink-soft);}
+
+  /* Track */
+  .filters{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px;}
+  .filters select,.filters input{width:auto;min-width:150px;}
+  .filters input[type=text]{flex:1;min-width:180px;}
+  .empty{text-align:center;padding:48px 20px;color:var(--ink-soft);}
+  .report-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;}
+  @media (max-width:760px){.report-grid{grid-template-columns:1fr;}}
+  .rcard{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;}
+  .rcard img{width:100%;height:150px;object-fit:cover;display:block;background:var(--bg);}
+  .rcard-body{padding:14px 16px;}
+  .rcard-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;}
+  .rcard h3{font-size:15.5px;margin:0 0 4px;font-family:'Source Sans 3',sans-serif;font-weight:700;}
+  .rcard .meta{font-size:12.5px;color:var(--ink-soft);margin:0 0 8px;}
+  .rcard p.desc{font-size:13.5px;margin:0 0 10px;color:var(--ink);}
+  .badge{font-size:11.5px;font-weight:700;padding:4px 9px;border-radius:20px;white-space:nowrap;}
+  .badge-reported{background:var(--red-tint);color:var(--red);}
+  .badge-progress{background:var(--blue-tint);color:var(--blue);}
+  .badge-resolved{background:var(--primary-tint);color:var(--primary-dark);}
+  .rcard-foot{display:flex;justify-content:space-between;align-items:center;margin-top:4px;}
+  .upvote{border:1px solid var(--border);background:var(--surface);border-radius:20px;padding:5px 12px;font-size:12.5px;font-weight:700;cursor:pointer;color:var(--ink-soft);}
+  .upvote:hover{border-color:var(--primary);color:var(--primary-dark);}
+  .age-warn{color:var(--red);font-weight:700;}
+
+  /* Admin */
+  .gate{max-width:340px;margin:40px auto;text-align:center;}
+  table.admin-table{width:100%;border-collapse:collapse;font-size:13.5px;}
+  table.admin-table th{text-align:left;font-size:11.5px;text-transform:none;color:var(--ink-soft);border-bottom:1px solid var(--border);padding:8px 8px;}
+  table.admin-table td{padding:10px 8px;border-bottom:1px solid var(--border);vertical-align:top;}
+  table.admin-table tr.overdue-row{background:var(--red-tint);}
+  .admin-select{width:auto;padding:6px 8px;font-size:13px;}
+  .admin-note{width:100%;min-height:36px;font-size:13px;}
+  .save-btn{padding:6px 12px;font-size:13px;}
+  .thumb{width:52px;height:52px;object-fit:cover;border-radius:6px;background:var(--bg);}
+  .foot-note{margin-top:36px;font-size:13px;color:var(--ink-soft);text-align:center;}
+  .toast{
+    position:fixed;bottom:24px;left:50%;transform:translateX(-50%);
+    background:var(--ink);color:#fff;padding:12px 20px;border-radius:8px;font-size:14px;
+    opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;font-weight:600;
+  }
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(-6px);}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <div class="topbar">
+    <div class="brand">
+      <span class="brand-mark">S</span>
+      <div>
+        <div class="brand-name">SafaiTrack</div>
+        <div class="brand-tag">Report overflow. Track resolution.</div>
+      </div>
+    </div>
+    <nav class="tabs">
+      <button data-tab="report" class="active">Report</button>
+      <button data-tab="track">Track Reports</button>
+      <button data-tab="admin">Admin</button>
+    </nav>
+  </div>
+
+  <div class="stats" id="stats"></div>
+
+  <!-- REPORT TAB -->
+  <section class="panel active" id="tab-report">
+    <div class="grid-2">
+      <div class="card">
+        <h2>Report overflowing garbage</h2>
+        <p class="subtext">Takes under a minute. Every report is visible to everyone tracking this list — no complaint disappears into a form nobody reads.</p>
+        <form id="report-form">
+          <label for="f-title">What's the issue?</label>
+          <input type="text" id="f-title" placeholder="e.g. Bin overflowing outside Gate 2" required>
+
+          <div class="row2">
+            <div>
+              <label for="f-category">Category</label>
+              <select id="f-category">
+                <option>Overflowing Bin</option>
+                <option>Illegal Dumping</option>
+                <option>Litter / Public Area</option>
+                <option>Drainage / Sewage Blockage</option>
+                <option>Dead Animal / Biohazard</option>
+                <option>Other</option>
+              </select>
+            </div>
+            <div>
+              <label for="f-severity">Severity</label>
+              <select id="f-severity">
+                <option>Low</option>
+                <option selected>Medium</option>
+                <option>High</option>
+              </select>
+            </div>
+          </div>
+
+          <label for="f-location">Location / landmark</label>
+          <div class="loc-row">
+            <input type="text" id="f-location" placeholder="e.g. VNIT Campus, near Hostel 3" required>
+            <button type="button" class="btn btn-ghost" id="geo-btn">Use GPS</button>
+          </div>
+          <div id="geo-status"></div>
+
+          <label>Photo (optional but recommended)</label>
+          <div class="photo-drop" id="photo-drop">Tap to add a photo of the spot</div>
+          <input type="file" accept="image/*" id="f-photo" style="display:none">
+          <img id="photo-preview">
+
+          <div class="row2">
+            <div>
+              <label for="f-name">Your name (optional)</label>
+              <input type="text" id="f-name" placeholder="Optional">
+            </div>
+            <div>
+              <label for="f-phone">Phone (optional)</label>
+              <input type="tel" id="f-phone" placeholder="For follow-up only">
+            </div>
+          </div>
+
+          <label for="f-desc">Additional details</label>
+          <textarea id="f-desc" placeholder="Anything that helps the cleanup crew find and fix this faster"></textarea>
+
+          <button type="submit" class="btn btn-primary btn-block">Submit report</button>
+        </form>
+      </div>
+
+      <div class="card">
+        <h2>Why this exists</h2>
+        <p class="subtext" style="margin-bottom:0;">Overflowing bins on roads, campuses and parks usually stay unreported because reporting is slow, or a report goes nowhere once filed.</p>
+        <ul class="tips">
+          <li><strong>One shared list.</strong> Every report lands in the same public queue — nothing sits in a private inbox.</li>
+          <li><strong>Age is visible.</strong> Reports older than 48 hours are flagged in red, on the list and in the admin queue, so backlog can't hide.</li>
+          <li><strong>Upvotes surface urgency.</strong> If ten people confirm the same overflowing bin, it should outrank a one-off report.</li>
+          <li><strong>Status is public.</strong> Reported → In Progress → Resolved, with a note from the crew, visible to whoever reported it.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- TRACK TAB -->
+  <section class="panel" id="tab-track">
+    <div class="card">
+      <h2>All reports</h2>
+      <p class="subtext">Filter by status or category, or search by location.</p>
+      <div class="filters">
+        <input type="text" id="t-search" placeholder="Search location or title...">
+        <select id="t-status">
+          <option value="">All statuses</option>
+          <option>Reported</option>
+          <option>In Progress</option>
+          <option>Resolved</option>
+        </select>
+        <select id="t-category">
+          <option value="">All categories</option>
+          <option>Overflowing Bin</option>
+          <option>Illegal Dumping</option>
+          <option>Litter / Public Area</option>
+          <option>Drainage / Sewage Blockage</option>
+          <option>Dead Animal / Biohazard</option>
+          <option>Other</option>
+        </select>
+        <select id="t-sort">
+          <option value="newest">Newest first</option>
+          <option value="oldest">Oldest first</option>
+          <option value="upvotes">Most upvoted</option>
+        </select>
+      </div>
+      <div id="report-list"></div>
+    </div>
+  </section>
+
+  <!-- ADMIN TAB -->
+  <section class="panel" id="tab-admin">
+    <div class="card gate" id="admin-gate">
+      <h2>Admin sign-in</h2>
+      <p class="subtext">Demo passcode: <strong>admin123</strong></p>
+      <input type="text" id="admin-pass" placeholder="Enter passcode" style="margin-bottom:12px;">
+      <button class="btn btn-primary btn-block" id="admin-login">Sign in</button>
+    </div>
+    <div class="card" id="admin-panel" style="display:none;">
+      <h2>Resolution queue</h2>
+      <p class="subtext">Rows in red have been open more than 48 hours.</p>
+      <div style="overflow-x:auto;">
+        <table class="admin-table" id="admin-table">
+          <thead>
+            <tr><th>Photo</th><th>Issue</th><th>Location</th><th>Age</th><th>Status</th><th>Note</th><th></th></tr>
+          </thead>
+          <tbody id="admin-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <p class="foot-note">This demo stores reports in shared storage visible to everyone using this app instance — don't submit real personal or sensitive information.</p>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const STORAGE_KEY = 'safaitrack_reports_v1';
+let reports = [];
+let uploadedPhoto = null;
+let isAdmin = false;
+
+function uid(){ return 'r' + Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2200);
+}
+function hoursSince(iso){ return (Date.now() - new Date(iso).getTime()) / 36e5; }
+function fmtAge(iso){
+  const h = hoursSince(iso);
+  if (h < 1) return Math.round(h*60) + 'm ago';
+  if (h < 48) return Math.round(h) + 'h ago';
+  return Math.round(h/24) + 'd ago';
+}
+function isOverdue(r){ return r.status !== 'Resolved' && hoursSince(r.createdAt) > 48; }
+
+async function loadReports(){
+  try{
+    const res = await window.storage.get(STORAGE_KEY, true);
+    reports = res ? JSON.parse(res.value) : [];
+  }catch(e){
+    reports = [];
+  }
+}
+async function saveReports(){
+  try{
+    await window.storage.set(STORAGE_KEY, JSON.stringify(reports), true);
+  }catch(e){
+    showToast('Could not save — storage error');
+  }
+}
+
+/* ---------- Tabs ---------- */
+document.querySelectorAll('nav.tabs button').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('nav.tabs button').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('tab-'+btn.dataset.tab).classList.add('active');
+    if(btn.dataset.tab==='track') renderTrack();
+    if(btn.dataset.tab==='admin') renderAdmin();
+  });
+});
+
+/* ---------- Stats ---------- */
+function renderStats(){
+  const total = reports.length;
+  const rep = reports.filter(r=>r.status==='Reported').length;
+  const prog = reports.filter(r=>r.status==='In Progress').length;
+  const res = reports.filter(r=>r.status==='Resolved').length;
+  const overdue = reports.filter(isOverdue).length;
+  const el = document.getElementById('stats');
+  el.innerHTML = `
+    <div class="stat"><div class="num">${total}</div><div class="lbl">Total reports</div></div>
+    <div class="stat"><div class="num">${rep}</div><div class="lbl">Awaiting action</div></div>
+    <div class="stat"><div class="num">${prog}</div><div class="lbl">In progress</div></div>
+    <div class="stat"><div class="num">${res}</div><div class="lbl">Resolved</div></div>
+    <div class="stat overdue"><div class="num">${overdue}</div><div class="lbl">Overdue (48h+)</div></div>
+  `;
+}
+
+/* ---------- Report form ---------- */
+document.getElementById('geo-btn').addEventListener('click', ()=>{
+  const status = document.getElementById('geo-status');
+  if(!navigator.geolocation){ status.textContent = 'Geolocation not supported on this device.'; return; }
+  status.textContent = 'Fetching location...';
+  navigator.geolocation.getCurrentPosition(pos=>{
+    const {latitude, longitude} = pos.coords;
+    status.textContent = `Captured: ${latitude.toFixed(5)}, ${longitude.toFixed(5)} — add a landmark above so crews can find it.`;
+    document.getElementById('f-location').dataset.lat = latitude;
+    document.getElementById('f-location').dataset.lng = longitude;
+  }, err=>{
+    status.textContent = 'Could not get location — enter a landmark manually.';
+  });
+});
+
+document.getElementById('photo-drop').addEventListener('click', ()=>document.getElementById('f-photo').click());
+document.getElementById('f-photo').addEventListener('change', (e)=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = (ev)=>{
+    const img = new Image();
+    img.onload = ()=>{
+      const maxW = 700;
+      const scale = Math.min(1, maxW/img.width);
+      const canvas = document.createElement('canvas');
+      canvas.width = img.width*scale;
+      canvas.height = img.height*scale;
+      canvas.getContext('2d').drawImage(img,0,0,canvas.width,canvas.height);
+      uploadedPhoto = canvas.toDataURL('image/jpeg', 0.7);
+      const preview = document.getElementById('photo-preview');
+      preview.src = uploadedPhoto;
+      preview.style.display = 'block';
+    };
+    img.src = ev.target.result;
+  };
+  reader.readAsDataURL(file);
+});
+
+document.getElementById('report-form').addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  const locInput = document.getElementById('f-location');
+  const report = {
+    id: uid(),
+    title: document.getElementById('f-title').value.trim(),
+    category: document.getElementById('f-category').value,
+    severity: document.getElementById('f-severity').value,
+    location: locInput.value.trim(),
+    lat: locInput.dataset.lat || null,
+    lng: locInput.dataset.lng || null,
+    photo: uploadedPhoto,
+    reporterName: document.getElementById('f-name').value.trim(),
+    reporterPhone: document.getElementById('f-phone').value.trim(),
+    description: document.getElementById('f-desc').value.trim(),
+    status: 'Reported',
+    upvotes: 0,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    statusLog: [{status:'Reported', note:'Submitted by citizen', at:new Date().toISOString()}]
+  };
+  reports.unshift(report);
+  await saveReports();
+  e.target.reset();
+  uploadedPhoto = null;
+  document.getElementById('photo-preview').style.display='none';
+  document.getElementById('geo-status').textContent = '';
+  renderStats();
+  showToast('Report submitted — thank you');
+});
+
+/* ---------- Track tab ---------- */
+function renderTrack(){
+  const search = document.getElementById('t-search').value.toLowerCase();
+  const statusF = document.getElementById('t-status').value;
+  const catF = document.getElementById('t-category').value;
+  const sort = document.getElementById('t-sort').value;
+
+  let list = reports.filter(r=>{
+    if(statusF && r.status!==statusF) return false;
+    if(catF && r.category!==catF) return false;
+    if(search && !(r.title.toLowerCase().includes(search) || r.location.toLowerCase().includes(search))) return false;
+    return true;
+  });
+  if(sort==='newest') list = list.slice().sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt));
+  if(sort==='oldest') list = list.slice().sort((a,b)=>new Date(a.createdAt)-new Date(b.createdAt));
+  if(sort==='upvotes') list = list.slice().sort((a,b)=>b.upvotes-a.upvotes);
+
+  const container = document.getElementById('report-list');
+  if(list.length===0){
+    container.innerHTML = '<div class="empty">No reports match yet. Be the first to report an issue.</div>';
+    return;
+  }
+  const badgeClass = {Reported:'badge-reported','In Progress':'badge-progress',Resolved:'badge-resolved'};
+  container.innerHTML = `<div class="report-grid">${list.map(r=>`
+    <div class="rcard">
+      ${r.photo ? `<img src="${r.photo}" alt="">` : ''}
+      <div class="rcard-body">
+        <div class="rcard-top">
+          <h3>${escapeHtml(r.title)}</h3>
+          <span class="badge ${badgeClass[r.status]}">${r.status}</span>
+        </div>
+        <div class="meta">${escapeHtml(r.category)} · ${escapeHtml(r.location)} · <span class="${isOverdue(r)?'age-warn':''}">${fmtAge(r.createdAt)}</span></div>
+        ${r.description ? `<p class="desc">${escapeHtml(r.description)}</p>` : ''}
+        <div class="rcard-foot">
+          <button class="upvote" data-id="${r.id}">▲ ${r.upvotes} confirm</button>
+          ${r.severity==='High' ? '<span class="badge badge-reported">High severity</span>' : ''}
+        </div>
+      </div>
+    </div>
+  `).join('')}</div>`;
+
+  container.querySelectorAll('.upvote').forEach(btn=>{
+    btn.addEventListener('click', async ()=>{
+      const r = reports.find(x=>x.id===btn.dataset.id);
+      r.upvotes += 1;
+      await saveReports();
+      renderTrack();
+    });
+  });
+}
+['t-search','t-status','t-category','t-sort'].forEach(id=>{
+  document.getElementById(id).addEventListener('input', renderTrack);
+  document.getElementById(id).addEventListener('change', renderTrack);
+});
+
+/* ---------- Admin tab ---------- */
+document.getElementById('admin-login').addEventListener('click', ()=>{
+  const val = document.getElementById('admin-pass').value;
+  if(val === 'admin123'){
+    isAdmin = true;
+    document.getElementById('admin-gate').style.display = 'none';
+    document.getElementById('admin-panel').style.display = 'block';
+    renderAdmin();
+  } else {
+    showToast('Incorrect passcode');
+  }
+});
+
+function renderAdmin(){
+  if(!isAdmin) return;
+  const tbody = document.getElementById('admin-tbody');
+  const sorted = reports.slice().sort((a,b)=> isOverdue(b)-isOverdue(a) || new Date(a.createdAt)-new Date(b.createdAt));
+  if(sorted.length===0){
+    tbody.innerHTML = '<tr><td colspan="7" style="padding:24px;text-align:center;color:var(--ink-soft);">No reports yet.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = sorted.map(r=>`
+    <tr class="${isOverdue(r)?'overdue-row':''}" data-id="${r.id}">
+      <td>${r.photo?`<img class="thumb" src="${r.photo}">`:'—'}</td>
+      <td><strong>${escapeHtml(r.title)}</strong><br><span style="color:var(--ink-soft);font-size:12px;">${escapeHtml(r.category)}</span></td>
+      <td>${escapeHtml(r.location)}</td>
+      <td class="${isOverdue(r)?'age-warn':''}">${fmtAge(r.createdAt)}</td>
+      <td>
+        <select class="admin-select status-select">
+          <option ${r.status==='Reported'?'selected':''}>Reported</option>
+          <option ${r.status==='In Progress'?'selected':''}>In Progress</option>
+          <option ${r.status==='Resolved'?'selected':''}>Resolved</option>
+        </select>
+      </td>
+      <td><textarea class="admin-note" placeholder="Note for citizen"></textarea></td>
+      <td><button class="btn btn-primary save-btn">Save</button></td>
+    </tr>
+  `).join('');
+
+  tbody.querySelectorAll('tr').forEach(row=>{
+    row.querySelector('.save-btn').addEventListener('click', async ()=>{
+      const r = reports.find(x=>x.id===row.dataset.id);
+      const newStatus = row.querySelector('.status-select').value;
+      const note = row.querySelector('.admin-note').value.trim();
+      r.status = newStatus;
+      r.updatedAt = new Date().toISOString();
+      if(newStatus==='Resolved') r.resolvedAt = new Date().toISOString();
+      r.statusLog.push({status:newStatus, note: note || '(no note)', at:new Date().toISOString()});
+      await saveReports();
+      renderStats();
+      renderAdmin();
+      showToast('Report updated');
+    });
+  });
+}
+
+function escapeHtml(str){
+  const d = document.createElement('div');
+  d.textContent = str || '';
+  return d.innerHTML;
+}
+
+/* ---------- Init ---------- */
+(async function init(){
+  await loadReports();
+  renderStats();
+  renderTrack();
+})();
+</script>
+</body>
+</html>
